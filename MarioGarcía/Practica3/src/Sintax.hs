@@ -30,21 +30,21 @@ data Expr = V Identifier | I Int | B Bool
 
 instance Show Expr where
  show e = case e of
-   (V x) -> "var[" ++ x ++ "]"
-   (I n) -> "num[" ++ (show n) ++ "]"
-   (B b) -> "bool[" ++ (show b) ++ "]"
-   (Add e1 e2) -> "add(" ++ (show e1) ++ "," ++ (show e2) ++ ")"
-   (Mul e1 e2) -> "mul(" ++ (show e1) ++ "," ++ (show e2) ++ ")"
+   (V x) -> "V[" ++ x ++ "]"
+   (I n) -> "I[" ++ (show n) ++ "]"
+   (B b) -> "B[" ++ (show b) ++ "]"
+   (Add e1 e2) -> "add(" ++ (show e1) ++ ", " ++ (show e2) ++ ")"
+   (Mul e1 e2) -> "mul(" ++ (show e1) ++ ", " ++ (show e2) ++ ")"
    (Succ e) -> "succ(" ++ (show e) ++ ")"
    (Pred e) -> "pred(" ++ (show e) ++ ")"
    (Not e) -> "not(" ++ (show e) ++ ")"
-   (And e1 e2) -> "and(" ++ (show e1) ++ "," ++ (show e2) ++ ")"
-   (Or e1 e2) -> "or(" ++ (show e1) ++ "," ++ (show e2) ++ ")"
-   (Lt e1 e2) -> "lt(" ++ (show e1) ++ "," ++ (show e2) ++ ")"
-   (Gt e1 e2) -> "gt(" ++ (show e1) ++ "," ++ (show e2) ++ ")"
-   (Eq e1 e2) -> "eq(" ++ (show e1) ++ "," ++ (show e2) ++ ")"
-   (If e1 e2 e3) -> "if(" ++ (show e1) ++ "," ++ (show e2) ++ "," ++ (show e3) ++ ")"
-   (Let x e1 e2) -> "let(" ++ (show e1) ++ "," ++ x ++ "." ++ (show e2) ++ ")"
+   (And e1 e2) -> "and(" ++ (show e1) ++ ", " ++ (show e2) ++ ")"
+   (Or e1 e2) -> "or(" ++ (show e1) ++ ", " ++ (show e2) ++ ")"
+   (Lt e1 e2) -> "lt(" ++ (show e1) ++ ", " ++ (show e2) ++ ")"
+   (Gt e1 e2) -> "gt(" ++ (show e1) ++ ", " ++ (show e2) ++ ")"
+   (Eq e1 e2) -> "eq(" ++ (show e1) ++ ", " ++ (show e2) ++ ")"
+   (If e1 e2 e3) -> "if(" ++ (show e1) ++ ", " ++ (show e2) ++ "," ++ (show e3) ++ ")"
+   (Let x e1 e2) -> "let(" ++ (show e1) ++ ", " ++ x ++ "." ++ (show e2) ++ ")"
    (Fn x e) -> "fn(" ++ x ++ "." ++ (show e) ++ ")"
    (App e1 e2) -> "app(" ++ (show e1) ++ ", " ++ (show e2) ++ ")"
 
@@ -110,8 +110,8 @@ subst :: Expr -> Substitution -> Expr
 subst (V x) (y,r) = if x == y
                     then r
                     else (V x)
-subst (I n) (_,_) = (I n)
-subst (B b) (_,_) = (B b)
+subst (I n) _ = (I n)
+subst (B b) _ = (B b)
 subst (Add e1 e2) s = Add (subst e1 s) (subst e2 s)
 subst (Mul e1 e2) s = Mul (subst e1 s) (subst e2 s)
 subst (Succ e) s = Succ (subst e s)
@@ -123,12 +123,10 @@ subst (Lt e1 e2) s = Lt (subst e1 s) (subst e2 s)
 subst (Gt e1 e2) s = Gt (subst e1 s) (subst e2 s)
 subst (Eq e1 e2) s = Eq (subst e1 s) (subst e2 s)
 subst (If e1 e2 e3) s = If (subst e1 s) (subst e2 s) (subst e3 s)
-subst ex@(Let z e1 e2) es@(x,r) = if x == z
-                                  then Let z (subst e1 es) e2
-                                  else if (notElem z (frVars r))
-                                       then Let z (subst e1 es) (subst e2 es)
-                                       else subst (alphaExpr ex) es
+subst e@(Let x e1 e2) s@(v,r) = if v /= x && (notElem x (frVars r))
+                                then Let x (subst e1 s) (subst e2 s)
+                                else subst (alphaExpr e) s
 subst (App e1 e2) s = App (subst e1 s) (subst e2 s)
-subst ex@(Fn x e) s@(v,es) = if x /= v && not (elem x (frVars es))
-                             then Fn x (subst e s)
-                             else subst (alphaExpr ex) s
+subst f@(Fn x e) s@(v,r) = if x /= v && not (elem x (frVars r))
+                           then Fn x (subst e s)
+                           else subst (alphaExpr f) s
