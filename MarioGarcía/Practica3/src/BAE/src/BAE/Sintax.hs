@@ -1,4 +1,4 @@
-module Sintax where
+module BAE.Sintax where
 
 import Data.List
 import Data.Char

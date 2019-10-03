@@ -1,6 +1,6 @@
-module Semantic where
+module BAE.Semantic where
 
-import Sintax
+import BAE.Sintax
 
 ----------------------------- Semántica dinámica. ------------------------------
 
@@ -148,30 +148,6 @@ evals e = if locked e
           else evals(eval1(e))
 
 {--
-    isFinal:
-
-    El programa decide si un estado es final. Esto es si y solo si dicho estado
-    esta bloqueado y es un valor.
--}
-
-final :: Expr -> Bool
-final (I n) = True
-final (B b) = True
-final (Add _ _) = error "[Add] Expects two integer values as arguments."
-final (Mul _ _) = error "[Mul] Expects two integer values as arguments."
-final (Succ _) = error "[Succ] Expects an integer value as argument."
-final (Pred _) = error "[Pred] Expects an integer value as argument."
-final (And _ _) = error "[And] Expects two boolean values as arguments."
-final (Or _ _) = error "[Or] Expects two boolean values as arguments."
-final (Not _) = error "[Not] Expects an boolean value as argument."
-final (Lt _ _) = error "[Lt] Expects two integer values as arguments."
-final (Gt _ _) = error "[Gt] Expects two integer values as arguments."
-final (Eq _ _) = error "[Eq] Expects two integer values as arguments."
-final (If _ _ _) = error "[If] Expects a boolean value as argument to decide a expression."
---final (App _ _ _) = error "[App] Expect a Function as first argument."
-final _ = False
-
-{--
     evale:
 
     Evalua una expresión hasta llegar a un estado final, de no ocurrir esto, sig-
@@ -206,10 +182,10 @@ type Decl = (Identifier, Type)
 type TypCtxt = [Decl]
 
 {--
-    vt:
+   vt:
 
-    Verifica el tipo de una expresión de manera que para cada caso, aplicando pa-
-    ra cada caso, la regla que le corresponda.
+   Verifica el tipo de una expresión de manera que para cada caso, aplicando pa-
+   ra cada caso, la regla que le corresponda.
 -}
 vt :: TypCtxt -> Expr -> Type -> Bool
 vt [] (V x) t = False
@@ -233,16 +209,13 @@ vt c (Let x e1 e2) t = if (vt c e1 Integer)
                        then vt ((x,Integer):c) e2 t
                        else vt ((x,Boolean):c) e2 t
 vt _ _ _ = error "Error in types."
--- Cambiar por un union en el let. --
--- delete \\
--- $ ahorra parentesis.
 
 {--
-    eval:
+   eval:
 
-    Primero verifica que el tipo de la expresión sea el correcto. Sí es correcto,
-    entonces hace la evaluación. En caso de que no lo sea, devuelve un error re-
-    lacionado con los tipos de las entradas.
+   Primero verifica que el tipo de la expresión sea el correcto. Sí es correcto,
+   entonces hace la evaluación. En caso de que no lo sea, devuelve un error re-
+   lacionado con los tipos de las entradas.
 -}
 eval :: Expr -> Type -> Expr
 eval e t = if vt [] e t
